@@ -49,8 +49,65 @@ This guide provides instructions on setting up an Ansible AWX node on a fresh Ce
    192.168.29.118
    ```
 
-5. Proceed with the rest of your Ansible playbook or tasks to set up and configure your AWX node.
+### Create Role to Install Zimbra
 
-Note: Make sure to replace the IP addresses in the inventory file with the appropriate IP addresses of your hosts.
+1. Go to the Ansible server and create a directory named `roles` and navigate into the `roles` directory.
 
-Once you have completed these steps, your Ansible AWX node should be ready for use.
+   ```shell
+   mkdir roles
+   cd roles
+   ```
+
+2. Create the `ansible-zimbra-single` role using the following command:
+
+   ```shell
+   ansible-galaxy init ansible-zimbra-single
+   ```
+
+   This will create a directory named `ansible-zimbra-single`, and inside that directory, you will find the structure of the role.
+
+   ```plaintext
+   ansible-zimbra-single
+   ├── defaults
+   │   └── main.yml
+   ├── files
+   ├── handlers
+   │   └── main.yml
+   ├── meta
+   │   └── main.yml
+   ├── README.md
+   ├── tasks
+   │   └── main.yml
+   ├── templates
+   ├── tests
+   │   ├── inventory
+   │   └── test.yml
+   └── vars
+       └── main.yml
+   ```
+
+   Note: In the repository, you will find all the files required to install Zimbra. Replace the existing files in the `defaults` directory with the provided role files in the repository.
+
+3. Go back to the parent directory where you created the `roles` directory, and create a YAML file named `site.yml` with the following contents to run the roles for installing Zimbra:
+
+   ```shell
+   vi site.yml
+   ```
+
+   ```yaml
+   ---
+   - hosts: zimbra
+     vars:
+       zimbra_timezone: Asia/Kolkata
+       zimbra_fqdn: mail.local.com
+       zimbra_admin_password: supp0rt
+     roles:
+       - ansible-zimbra-single
+   ```
+
+   Save the file and exit.
+
+4. ```shell
+   ansible-playbook site.yml --tags zimbra10
+   ```
+Now you can use this configuration to automate the installation of Zimbra 10 using Ansible.
