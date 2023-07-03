@@ -61,13 +61,13 @@ This guide provides instructions on setting up an Ansible AWX node on a fresh Ce
 2. Create the `ansible-zimbra-single` role using the following command:
 
    ```shell
-   ansible-galaxy init ansible-zimbra-single
+   ansible-galaxy init ansible-role-zimbra10-multi
    ```
 
-   This will create a directory named `ansible-zimbra-single`, and inside that directory, you will find the structure of the role.
+   This will create a directory named `ansible-role-zimbra10-multi`, and inside that directory, you will find the structure of the role.
 
    ```plaintext
-   ansible-zimbra-single
+   ansible-role-zimbra10-multi
    ├── defaults
    │   └── main.yml
    ├── files
@@ -96,18 +96,15 @@ This guide provides instructions on setting up an Ansible AWX node on a fresh Ce
 
    ```yaml
    ---
-   - hosts: zimbra
-     vars:
-       zimbra_timezone: Asia/Kolkata
-       zimbra_fqdn: mail.local.com
-       zimbra_admin_password: supp0rt
-     roles:
-       - ansible-zimbra-single
+   - ---
+- hosts: zimbra_all 
+  roles:
+    - ansible-role-zimbra10-multi
    ```
 
    Save the file and exit.
 
 4. ```shell
-   ansible-playbook site.yml --tags zimbra10
+   ansible-playbook site.yml
    ```
 Now you can use this configuration to automate the installation of Zimbra 10 using Ansible.
