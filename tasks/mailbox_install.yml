@@ -1,0 +1,55 @@
+---
+- name: configure hosts file
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+
+- name: copy the License File
+  template:
+    src: zimbra_license.j2
+    dest: /tmp/ZCSLicense.xml
+
+- name: download zimbra installer
+  get_url:
+    url: https://files.zimbra.com/downloads/10.0.0_GA/zcs-NETWORK-10.0.0_GA_4518.UBUNTU20_64.20230301065514.tgz
+    dest: /root
+
+- name: extract zimbra installer
+  unarchive:
+    remote_src: yes
+    src: /root/zcs-NETWORK-10.0.0_GA_4518.UBUNTU20_64.20230301065514.tgz
+    dest: /root
+
+
+- name: configure answer file
+  template:
+    src: mailbox_answers.j2
+    dest: /tmp/mailbox_answers.txt
+
+- name: configure config file
+  template:
+    src: mailbox_config.j2
+    dest: /tmp/mailbox_config.txt
+
+- name: run zimbra installer phase 1
+  shell: ./install.sh -s -l /tmp/ZCSLicense.xml < /tmp/mailbox_answers.txt
+  args:
+    chdir: /root/zcs-NETWORK-10.0.0_GA_4518.UBUNTU20_64.20230301065514.tgz
+
+- name: run zimbra installer phase 2
+  shell: /opt/zimbra/libexec/zmsetup.pl -c /tmp/mailbox_config.txt
+
+- name: configure rsyslog.conf
+  template:
+    src: rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rsyslog
+
+- name: run handlers
+  meta: flush_handlers

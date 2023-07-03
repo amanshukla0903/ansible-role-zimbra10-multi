@@ -1,0 +1,184 @@
+---
+# tasks file for ansible-zimbra-multi
+- name: install utilities and dependencies
+  apt:
+    name:
+      - bash-completion
+      - tmux
+      - telnet
+      - dnsutils
+      - tcpdump
+      - wget
+      - lsof
+      - rsync
+    state: present
+    update_cache: yes
+    
+- name: perform update
+  apt:
+    upgrade: dist
+    update_cache: yes
+    
+- name: configure chronyd
+  service:
+    name: chronyd
+    state: started
+    enabled: yes
+
+- name: configure time zone
+  community.general.timezone:
+    name: "{{ zimbra_timezone }}"
+
+- name: configure time sync
+  shell: timedatectl set-ntp true
+
+- name: restart chronyd
+  service:
+    name: chronyd
+    state: restarted
+
+- name: configure ldap hostname
+  hostname:
+    name: "{{ zimbra_ldap_fqdn }}"
+  when: inventory_hostname in groups['zimbra_ldap']
+
+- name: configure mta hostname
+  hostname:
+    name: "{{ zimbra_mta_fqdn }}"
+  when: inventory_hostname in groups['zimbra_mta']
+
+- name: configure proxy hostname
+  hostname:
+    name: "{{ zimbra_proxy_fqdn }}"
+  when: inventory_hostname in groups['zimbra_proxy']
+
+- name: configure mailbox hostname
+  hostname:
+    name: "{{ zimbra_mailbox_fqdn }}"
+  when: inventory_hostname in groups['zimbra_mailbox']
+
+- name: capture random chars 1
+  shell: date | md5sum | cut -c 1-9 
+  register: zimbra_random_chars_1
+  when: inventory_hostname in groups['zimbra_ldap']
+
+- name: wait 3 seconds
+  pause:
+    seconds: 3
+  when: inventory_hostname in groups['zimbra_ldap']
+
+- name: capture random chars 2
+  shell: date | md5sum | cut -c 1-14
+  register: zimbra_random_chars_2
+  when: inventory_hostname in groups['zimbra_ldap']
+
+- name: gather facts
+  setup:
+
+- name: configure hosts file
+  lineinfile:
+    line: "{{ ansible_default_ipv4.address }} {{ ansible_fqdn }} {{ ansible_hostname }}"
+    path: '/etc/hosts'
+
+- name: gather package facts
+  package_facts:
+
+- name: disable postfix
+  service:
+    name: postfix
+    state: stopped
+    enabled: no
+  when: "'postfix' in ansible_facts.packages"
+
+- name: import ldap_install.yml
+  import_tasks: ldap_install.yml
+  when: inventory_hostname in groups['zimbra_ldap']
+
+- name: import mta_install.yml
+  import_tasks: mta_install.yml
+  when: inventory_hostname in groups['zimbra_mta']
+
+- name: import proxy_install.yml
+  import_tasks: proxy_install.yml
+  when: inventory_hostname in groups['zimbra_proxy']
+
+- name: import mailbox_install.yml
+  import_tasks: mailbox_install.yml
+  when: inventory_hostname in groups['zimbra_mailbox']
+
+- name: setup ldap ssh keys
+  shell: ./zmupdateauthkeys
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  when: inventory_hostname in groups['zimbra_ldap']
+
+- name: setup mta ssh keys
+  shell: ./zmupdateauthkeys
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  when: inventory_hostname in groups['zimbra_mta']
+
+- name: setup proxy ssh keys
+  shell: ./zmupdateauthkeys
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  when: inventory_hostname in groups['zimbra_proxy']
+
+- name: setup mailbox ssh keys
+  shell: ./zmupdateauthkeys
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  when: inventory_hostname in groups['zimbra_mailbox']
+
+- name: enable statistics
+  shell: ./zmsyslogsetup
+  args:
+    chdir: /opt/zimbra/libexec
+
+- name: restart zimbra mailbox
+  shell: ./zmcontrol restart
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  become_flags: -i
+  when: inventory_hostname in groups['zimbra_mailbox']
+  ignore_errors: yes
+
+- name: restart zimbra proxy
+  shell: ./zmcontrol restart
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  become_flags: -i
+  when: inventory_hostname in groups['zimbra_proxy']
+  ignore_errors: yes
+
+- name: restart zimbra mta
+  shell: ./zmcontrol restart
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  become_flags: -i
+  when: inventory_hostname in groups['zimbra_mta']
+  ignore_errors: yes
+
+- name: restart zimbra ldap
+  shell: ./zmcontrol restart
+  args:
+    chdir: /opt/zimbra/bin
+  become: yes
+  become_user: zimbra
+  become_flags: -i
+  when: inventory_hostname in groups['zimbra_ldap']
+  ignore_errors: yes
