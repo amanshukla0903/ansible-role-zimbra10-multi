@@ -9,7 +9,7 @@ This guide will help you to install multi-node Zimbra 10 installation using the 
 
 ## Installation Steps
 
-1. Start with a fresh CentOS 8 minimal installation.
+1. Start with a fresh Ubuntu 20.04 minimal installation.
 
 2. Install the "netaddr" Python module by running the following command:
    ```
