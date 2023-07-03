@@ -93,10 +93,6 @@ This guide will help you to install multi-node Zimbra 10 installation using the 
    ```shell
    vi site.yml
    ```
-
-   ```yaml
-   ---
-   - ---
 ``` shell
 - hosts: zimbra_all 
   roles:
