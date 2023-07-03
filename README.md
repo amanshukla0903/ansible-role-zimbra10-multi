@@ -1,6 +1,6 @@
 # Ansible Role Installation Guide
 
-This guide provides instructions on setting up an Ansible AWX node on a fresh CentOS 8 minimal installation. The AWX node requires the "netaddr" Python module to be installed. Please follow the steps below to configure the AWX node.
+This guide will help you to install multi-node Zimbra 10 installation using the Ansible role.
 
 ## Requirements
 
